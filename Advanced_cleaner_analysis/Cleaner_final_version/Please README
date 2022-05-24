@@ -1,0 +1,62 @@
+
+
+This document outlines the assumptions made, thought process, and the process and justification of cleaning the data that I have done in this entire homework.
+
+                           -----------DATA CLEANING----------
+                           
+    GENERAL COMMENTS:
+The datasets are related using the order id column, however in both tables, the order id columns is formed by concatenating the shop id with the order id using a dot(.). This is confirmed on the orders data whose left part of the order id entry is exactly same as the shop id. Thus an entry like 5888534.178 means that 5888534 is the shop id and 178 is the order id. 
+Knowing this, I splitted the order id column into shop id (left part) and order id (right) and used these two columns to join the data. It is paramount to use the two columns so that only the combinations and permutations of the two tables where the two columns meet can be joined together to represent the data for each order. 
+
+The cleaning of data section is repeated on every notebook provided and changes only occurs after joining the two datasets.
+
+
+    The Orders dataset:
+The data was fairly clean with few duplicates to be removed. The criteria was 
+1. If a row is exactly indentical (including the timestamps for ordering and fullfillment) to another row for all the column attributes, any one of them was removed e.g. entry 10989 and 10990 on the duplicates dataframe in my merchant notebook
+
+2. If a two rows are exactly same for all column attributes except delivery timestamp and or fullfilled timestamp, I assumed that the order was canceled the first time and delivered or fullfilled on the latest timestamp. Here I dropped the row with previous timestamp and kept the most recent. Example is etry index 537 and 537 on the duplicates dataframe in my merchant notebook. If delivery timestamp is the only difference, it might be a wrong delivery case. If the fullfilled timestamp is different for same order id that might have been a reprinted order.
+
+3. If two different orders attributes had same order id, that is a case of wrong data entry and both of them were dropped since we can't guess which has the collect order id number.
+
+
+
+    Line items Dataset:
+Cleaning this had me make a very high call based on my logic and data attributes / description provided. 
+The Qunatity attribute is described as the "Ordered quantity of specific line item". This means that each order id in this data should be unique at least on the quantity attribute/column. Out of the 57583 raw entries provided, only 15621 were unique and thus I had to drop the rest as duplicates. I argue that if the duplicated data was justified to be there, there would be no quantity column so that we can calculate the quantity of each order by counting each order_id unique row in the datase to get the quantity.
+Dataset difference in size justification: - The orders dataset had 13495 unique merchants data, while the line items dataset had 15621 unique rows for data with different attributes. WHY? Because a single order can have several products that are in different line items. So the difference (15621 - 13495 = 2126) entries were because of orders with different product lines in them.
+
+The combined Dataset:
+The orders and line items dataset were combined using an SQL LEFT JOIN equivalent in Pandas python. The left join was done since we needed have data for every product line item. 
+
+
+
+                             ----------ASSUMPTIONS-------------
+
+1. To get the most popular attributes, e.g. the country that many orders are made from a merchant, I assumed that the statistical mode represents popularity. This can be wrong as no consideration is given to other attributes whatsoever. 
+
+2. In calculating the time span for print providers, there were some order that were not yet fullfilled, to calculate the time diference for these, I assumed that the printing was done after 48 hours from the last day an order was printed according to the dataset. Similary, I used a timestamp of after 100 for shpiment carriers from the last day a shipment was delivered. I used the last day and not a central date so that the data can be fair and add more weight of success to all the print providers who had printed already and shipment carriers who had delivered. These figure were researched and could be potentially wrong for Printify.
+
+3. In item status column, several factors were grouped together depending on who was the part in the wrong. For instance, a canceled order was blamed on the merchant, a shipment failure was blamed on the carrier and a reprinted status was blamed on the print provider. This was based on my discretion and could be wrong due to interpretation and confirmation bias on my side.
+
+4. A merchant does not have a say on the choice of print providers and shipment carriers for thier orders.
+
+
+5. Where previous month was needed as a parameter in the SQL part, I used November. This was becasue data was collected from October to December and thus saying previous month meant previous of December.
+
+
+6. The term total sales in the questions was interpreted as sum of total cost generated from the sales, products count were the aggregate quantity attribute of the each order, and order count was the aggregate of the order_id attribute which will always be less than product count.
+
+
+
+                       ----------- Analysis Modelling -------------
+                
+While calculating the success factor for each group of Printify stakeholders, I used their metrics aganist the fundamentals of Printify Business model so that their success can be solely based on their value to the company. For instance, the company wanted to end the contract with the wort performing print providers, if the only metric that is used to measure the success of print providers was say total of orders printed, they can take advantage and print high volume of extremely low value items that is giving Printify say 2 cents per product. Doing this would show that that is the best performing print provider and discount them while their value to the company is very low. This is why the revenue generated from the orders printed is used to calculate the metric of their success even though they do not directly influence it. 
+
+
+
+                          ----------- Final Remarks ------------------
+                 
+It is with great honor that I present these findings to Printify. The last couple of days have been very busy trying to make sense of every insight that I got from the data. It was full of many 'aaaha!' moments and numerous dead ends but in all that I did I really enjoyed doing this. I present this is passion and zeal towards data analysis at Printify. 
+I was uploading the non-clean work progress at GitHub: https://github.com/pauxru/Printify-Analysis/tree/main/HOMEWORK 
+and it is available for review. 

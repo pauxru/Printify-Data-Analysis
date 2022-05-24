@@ -1,0 +1,47 @@
+-- Prepared on MySQL Workbench 8.0
+
+--                  -------------SQL Questions--------------- 
+
+-- Name of the database used containing the combined orders and line items data
+USE printify_hm;
+
+
+-- Write a query returning total sales, orders, and count of merchants by month
+SELECT MONTHNAME(order_dt) AS Month_name, SUM(TOTAL_COST), SUM(QUANTITY), COUNT(MERCHANT_ID)
+FROM printify_hm.printify_combined
+GROUP BY Month_name;
+
+
+-- Write a query returning merchants total sales, product count, and order count ordered by order count for merchants with more than 5 orders
+SELECT  MERCHANT_ID,
+SUM(TOTAL_COST) AS Total_sales, 
+SUM(QUANTITY) AS Product_count, 
+COUNT(ORDER_ID) AS Order_count
+FROM printify_hm.printify_combined
+GROUP BY MERCHANT_ID 
+HAVING Order_count > 5
+ORDER BY Order_count DESC;
+
+
+-- Write a query returning all ORDER_IDs with the time the merchant has been active at the time of the order
+SELECT  MERCHANT_ID, ORDER_ID, 
+TIMESTAMPDIFF(DAY, MERCHANT_REGISTERED_DT, ORDER_DT) AS Days_active
+FROM printify_hm.printify_combined;
+
+
+-- the rank of the merchant by order count for the previous month
+-- https://www.mysqltutorial.org/mysql-window-functions/mysql-rank-function/
+SELECT MERCHANT_ID, COUNT(ORDER_ID),
+RANK() OVER(ORDER BY COUNT(ORDER_ID) DESC) AS Order_rank
+FROM printify_hm.printify_combined
+WHERE MONTHNAME(order_dt) = 'November'
+GROUP BY MERCHANT_ID;
+
+
+-- the merchant's primary sales channel for the previous month
+SELECT MERCHANT_ID, SALES_CHANNEL_TYPE_ID AS Primary_sales_channel,  COUNT(SALES_CHANNEL_TYPE_ID) AS occurs, order_dt
+FROM printify_hm.printify_combined
+GROUP BY MERCHANT_ID
+HAVING MONTHNAME(order_dt) = 'November'
+ORDER BY MERCHANT_ID;
+

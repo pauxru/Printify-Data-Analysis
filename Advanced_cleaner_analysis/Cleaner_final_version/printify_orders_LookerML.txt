@@ -1,0 +1,163 @@
+# This document was prepared on Notepad (simulating developer option on Looker) to show some basic information regarding the 
+# orders data. I used* the combined version of the dataset for simplicity
+# on the free sandbox version of Looker which have limited functionality.
+# Basic dimensions of count, sum, avg, and min have been calculated and 
+# thus available for explore for business needs of Printify. 
+
+
+# The view with all dimensions. Just one as the data was one table
+view: printify_orders{
+  # printify_hm 
+  sql_table_name: printify_hm.printify_orders;;
+
+  dimension: Merchant{
+    primary_key: yes
+    type: number
+    # hidden: yes
+    value_format: "decimal_0"
+    sql: ${TABLE}.MERCHANT_ID ;;
+  }
+
+  dimension: Order{
+    type: number
+    sql: ${TABLE}.ORDER_ID ;;
+  }
+
+  dimension: Shop{
+    type: number
+    sql: ${TABLE}.SHOP_ID ;;
+  }
+
+  dimension_group: Order_date{
+    type: time
+    timeframes: [date, week, month, year]
+    convert_tz: no
+    sql: CASE WHEN (${TABLE}.ORDER_DT = '' OR ${TABLE}.ORDER_DT is NULL) THEN TIMESTAMP(DATE(2020,10,01)) ELSE TIMESTAMP(PARSE_DATE('%m/%Y', ${TABLE}.ORDER_DT))  END ;;
+  }
+
+dimension_group: Fulfilled_date{
+    type: time
+    timeframes: [date, week, month, year]
+    convert_tz: no
+    sql: CASE WHEN (${TABLE}.FULFILLED_DT = '' OR ${TABLE}.FULFILLED_DT is NULL) THEN TIMESTAMP(DATE(2020,12,30)) ELSE TIMESTAMP(PARSE_DATE('%m/%Y', ${TABLE}.FULFILLED_DT))  END ;;
+  }
+
+dimension_group: Merchant_registered_date{
+    type: time
+    timeframes: [date, week, month, year]
+    convert_tz: no
+    sql: CASE WHEN (${TABLE}.MERCHANT_REGISTERED_DT = '' OR ${TABLE}.MERCHANT_REGISTERED_DT is NULL) THEN TIMESTAMP(DATE(2020,07,30)) ELSE TIMESTAMP(PARSE_DATE('%m/%Y', ${TABLE}.MERCHANT_REGISTERED_DT))  END ;;
+  }
+
+  dimension: Country{
+    type: string
+    sql: ${TABLE}.ADDRESS_TO_COUNTRY ;;
+  }
+
+  dimension: Region{
+    type: string
+    sql: ${TABLE}.ADDRESS_TO_REGION ;;
+  }
+
+  dimension: Re-print{
+    type: yesno
+    sql: ${TABLE}.REPRINT_FLAG = '1' ;;
+  }
+
+  dimension: Sales_channel{
+    type: number
+    sql: ${TABLE}.SALES_CHANNEL_TYPE_ID ;;
+  }
+
+  dimension: Total_Cost{
+    type: Number
+    sql: ${TABLE}.TOTAL_COST ;;
+  }
+
+  dimension: Shipping_cost{
+    # hidden: yes
+    type: number
+    value_format: "decimal_0"
+    sql: ${TABLE}.TOTAL_SHIPMENT ;;
+  }
+
+  dimension: Sub_is_active{
+    type: yesno
+    sql: ${TABLE}.SUB_IS_ACTIVE_FLAG ;;
+  }
+
+  dimension: Sub_plan {
+    type: string
+    sql: ${TABLE}.SUB_PLAN ;;
+  }
+
+  dimension: Shipment_Carrier{
+    type: Number
+    sql: ${TABLE}.SHIPMENT_CARRIER ;;
+  }
+
+dimension_group: Shipment_delivery_date{
+    type: time
+    timeframes: [date, week, month, year]
+    convert_tz: no
+    sql: CASE WHEN (${TABLE}.SHIPMENT_DELIVERD_DT = '' OR ${TABLE}.SHIPMENT_DELIVERD_DT is NULL) THEN TIMESTAMP(DATE(2020,11,30)) ELSE TIMESTAMP(PARSE_DATE('%m/%Y', ${TABLE}.SHIPMENT_DELIVERD_DT))  END ;;
+  }
+
+
+  dimension: Print_provider{
+    type: number
+    sql: ${TABLE}.PRINT_PROVIDER_ID ;;
+  }
+
+  dimension: Product_brand{
+    type: string
+    sql: ${TABLE}.PRODUCT_BRAND ;;
+  }
+
+  dimension: Product_type{
+    type: string
+    sql: ${TABLE}.PRODUCT_TYPE ;;
+  }
+
+  dimension: Item_status{
+    type: string
+    sql: ${TABLE}.ITEM_STATUS ;;
+  }
+
+  dimension: Quantity{
+    type: number
+    sql: ${TABLE}.QUANTITY ;;
+  }
+
+# ------------------------ Measures
+
+  measure: count {
+    type: count
+    drill_fields: [Merchant, Orders, Sales_channel, Shipment_delivery_date, Print_provider]
+  }
+
+  measure: min_order_date {
+    type: min
+    sql: ${Order_date} ;;
+  }
+
+  measure: max_order_date {
+    type: max
+    sql: ${Order_date} ;;
+  }
+
+  measure: average_cost {
+    type: average
+    sql: ${Total_Cost} ;;
+  }
+
+  measure: re_printed_count{
+    type: count
+    filters: {
+      field: Re-print
+      value: "1"
+    }
+  }
+
+
+}
